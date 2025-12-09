@@ -86,5 +86,7 @@ Pode ser expandido futuramente com edição de produtos (UPDATE), login, e layou
 imagens do sistema
 
 ![cadastro](./cadastro.png)
+
 ![excluir](./excluir.png)
+
 ![der](./DER.png)
