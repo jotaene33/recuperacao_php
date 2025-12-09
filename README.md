@@ -19,12 +19,8 @@ Descrição
 ✔ Listagem dos produtos cadastrados
 ✔ Exclusão de produtos através de link com confirmação
 
-🛠 Tecnologias Utilizadas
-Ferramenta	Uso
-PHP	Lógica do sistema
-PDO (PHP Data Objects)	Conexão segura com MySQL
-MySQL	Banco de dados
-HTML	Interface básica
+🏗 [Clique aqui para ver o PH](index.php)
+
 🏗 Estrutura do Banco de Dados
 
 A tabela produtos deve existir no banco loja_recuperacao com os seguintes campos:
