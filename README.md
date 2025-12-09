@@ -19,7 +19,7 @@ Descrição
 ✔ Listagem dos produtos cadastrados
 ✔ Exclusão de produtos através de link com confirmação
 
-🏗 [Clique aqui para ver o PH](index.php)
+🏗 [Clique aqui para ver o código PHP](index.php)
 
 🏗 Estrutura do Banco de Dados
 
