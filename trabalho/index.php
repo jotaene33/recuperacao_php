@@ -1,74 +1,99 @@
 <?php
-$host = "localhost";
-$dbName = "loja_recuperacao";
-$user = "root";
-$pass = "";
+// ---- CONEXÃO ----
+$pdo = new PDO("mysql:host=localhost;dbname=loja_recuperacao", "root", "");
 
-// Conectar ao MySQL
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbName", $user, $pass);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    die("Erro: " . $e->getMessage());
+// ---- EXCLUIR ----
+if (isset($_GET['delete'])) {
+    $id = $_GET['delete'];
+    $pdo->query("DELETE FROM produtos WHERE id = $id");
+    header("Location: loja.php");
 }
 
-// Excluir produto se for pedido
-if (isset($_GET['excluir'])) {
-    $idExcluir = intval($_GET['excluir']);
-    $pdo->prepare("DELETE FROM produtos WHERE id = ?")->execute([$idExcluir]);
-    echo "<p>Produto excluído com sucesso!</p>";
+// ---- SE ESTIVER EDITANDO, BUSCA OS DADOS ----
+$editando = false;
+$produtoEdit = null;
+
+if (isset($_GET['edit'])) {
+    $editando = true;
+    $id = $_GET['edit'];
+    $produtoEdit = $pdo->query("SELECT * FROM produtos WHERE id = $id")->fetch(PDO::FETCH_ASSOC);
 }
 
-// Inserir produto
+// ---- SALVAR (NOVO OU UPDATE) ----
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $sql = $pdo->prepare("INSERT INTO produtos (nome, categoria, preco, quantidade, descricao) VALUES (?, ?, ?, ?, ?)");
-    $sql->execute([
-        $_POST['nome'],
-        $_POST['categoria'],
-        $_POST['preco'],
-        $_POST['quantidade'],
-        $_POST['descricao']
-    ]);
-    echo "<p>Produto cadastrado com sucesso!</p>";
+    $nome = $_POST['nome'];
+    $categoria = $_POST['categoria'];
+    $preco = $_POST['preco'];
+    $quantidade = $_POST['quantidade'];
+    $descricao = $_POST['descricao'];
+
+    if (isset($_POST['id']) && $_POST['id'] !== "") {
+        // UPDATE
+        $id = $_POST['id'];
+        $sql = $pdo->prepare("UPDATE produtos SET nome=?, categoria=?, preco=?, quantidade=?, descricao=? WHERE id=?");
+        $sql->execute([$nome, $categoria, $preco, $quantidade, $descricao, $id]);
+        echo "<script>alert('Produto atualizado!'); window.location='loja.php';</script>";
+    } else {
+        // INSERT
+        $sql = $pdo->prepare("INSERT INTO produtos (nome, categoria, preco, quantidade, descricao) VALUES (?, ?, ?, ?, ?)");
+        $sql->execute([$nome, $categoria, $preco, $quantidade, $descricao]);
+        echo "<script>alert('Produto cadastrado!'); window.location='loja.php';</script>";
+    }
 }
 
-// Buscar todos os produtos
-$produtos = $pdo->query("SELECT * FROM produtos ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
+// ---- LISTAR ----
+$produtos = $pdo->query("SELECT * FROM produtos")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
-<h2>Cadastro de Produto</h2>
+<!----------------- HTML ----------------->
+
+<h2><?= $editando ? "✏ Editar Produto" : "➕ Cadastrar Produto" ?></h2>
+
 <form method="POST">
-    Nome:<br><input type="text" name="nome" required><br>
-    Categoria:<br><input type="text" name="categoria" required><br>
-    Preço:<br><input type="number" step="0.01" name="preco" required><br>
-    Quantidade:<br><input type="number" name="quantidade" required><br>
-    Descrição:<br><textarea name="descricao" required></textarea><br>
-    <button type="submit">Cadastrar</button>
+    <input type="hidden" name="id" value="<?= $editando ? $produtoEdit['id'] : '' ?>">
+
+    Nome: <input type="text" name="nome" value="<?= $editando ? $produtoEdit['nome'] : '' ?>"><br><br>
+    Categoria: <input type="text" name="categoria" value="<?= $editando ? $produtoEdit['categoria'] : '' ?>"><br><br>
+    Preço: <input type="number" step="0.01" name="preco" value="<?= $editando ? $produtoEdit['preco'] : '' ?>"><br><br>
+    Quantidade: <input type="number" name="quantidade" value="<?= $editando ? $produtoEdit['quantidade'] : '' ?>"><br><br>
+
+    Descrição:<br>
+    <textarea name="descricao"><?= $editando ? $produtoEdit['descricao'] : '' ?></textarea><br><br>
+
+    <button type="submit"><?= $editando ? "Salvar Alterações" : "Cadastrar" ?></button>
 </form>
 
-<h2>Produtos Cadastrados</h2>
-<table border="1" cellpadding="5">
+<br><hr><br>
+
+<h2>📦 Produtos Cadastrados</h2>
+
+<table border="1" cellpadding="10">
     <tr>
         <th>ID</th>
         <th>Nome</th>
         <th>Categoria</th>
         <th>Preço</th>
-        <th>Quantidade</th>
-        <th>Descrição</th>
-        <th>Ação</th>
+        <th>Qtd</th>
+        <th>Ações</th>
     </tr>
-    <?php foreach($produtos as $p): ?>
+
+    <?php foreach ($produtos as $p): ?>
     <tr>
         <td><?= $p['id'] ?></td>
-        <td><?= htmlspecialchars($p['nome']) ?></td>
-        <td><?= htmlspecialchars($p['categoria']) ?></td>
-        <td><?= $p['preco'] ?></td>
+        <td><?= $p['nome'] ?></td>
+        <td><?= $p['categoria'] ?></td>
+        <td>R$ <?= number_format($p['preco'], 2, ',', '.') ?></td>
         <td><?= $p['quantidade'] ?></td>
-        <td><?= htmlspecialchars($p['descricao']) ?></td>
-        <td><a href="?excluir=<?= $p['id'] ?>" onclick="return confirm('Tem certeza que quer excluir?')">Excluir</a></td>
+        <td>
+            <a href="loja.php?edit=<?= $p['id'] ?>">✏ Editar</a> |
+            <a href="loja.php?delete=<?= $p['id'] ?>" onclick="return confirm('Excluir este produto?')">🗑 Excluir</a>
+        </td>
     </tr>
     <?php endforeach; ?>
 </table>
+
+
+
 
 
 
