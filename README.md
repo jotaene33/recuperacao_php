@@ -87,4 +87,4 @@ imagens do sistema
 
 ![cadastro](./cadastro.png)
 ![excluir](./excluir.png)
-![der](./der.png)
+![der](./DER.png)
